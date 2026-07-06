@@ -1,0 +1,1698 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guardian Path - High-Fidelity Safety Ecosystem</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            200: '#ddd6fe',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            800: '#5b21b6',
+                            900: '#4c1d95',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Leaflet.js Map Styles & Script -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f3f4f6;
+            transition: background-color 0.3s ease;
+        }
+        
+        body.dark {
+            background-color: #030712;
+        }
+
+        /* Glassmorphic elements */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 0, 0, 0.04);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .dark .glass-panel {
+            background: rgba(17, 24, 39, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        /* Concentric SOS Ripples */
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.15); opacity: 0.4; }
+            100% { transform: scale(1.4); opacity: 0; }
+        }
+
+        .sos-ripple-1 { animation: pulse-ring 2.5s infinite; }
+        .sos-ripple-2 { animation: pulse-ring 2.5s infinite 0.8s; }
+        .sos-ripple-3 { animation: pulse-ring 2.5s infinite 1.6s; }
+
+        /* Smooth UI Panels */
+        .app-view {
+            display: none;
+            opacity: 0;
+            transform: translateY(12px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .app-view.active {
+            display: flex;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(156, 163, 175, 0.3);
+            border-radius: 99px;
+        }
+
+        /* Styled Leaflet Popups to match design */
+        .leaflet-popup-content-wrapper {
+            background: rgba(255, 255, 255, 0.95) !important;
+            color: #1f2937 !important;
+            border-radius: 12px !important;
+            font-family: 'Plus Jakarta Sans', sans-serif !important;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+        }
+        .dark .leaflet-popup-content-wrapper {
+            background: #111827 !important;
+            color: #f3f4f6 !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        }
+        .leaflet-popup-tip {
+            background: rgba(255, 255, 255, 0.95) !important;
+        }
+        .dark .leaflet-popup-tip {
+            background: #111827 !important;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-0 md:p-6 select-none overflow-x-hidden">
+
+    <!-- DESKTOP CONTAINER SYSTEM: SIMULATES THE COOPERATIVE CHAT ON LEFT & INTERACTIVE PHONE MOCKUP ON RIGHT -->
+    <div class="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+        
+        <!-- LEFT PANEL: SYSTEM DESCRIPTIONS & CONTROL BENCH -->
+        <div class="hidden lg:flex lg:col-span-5 flex-col justify-between space-y-6 text-gray-800 dark:text-gray-100 p-4">
+            <div>
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="p-0 rounded-2xl overflow-hidden flex-shrink-0">
+                        <img src="ASSEST/guardian-path.png" alt="Guardian Path" class="w-10 h-10 object-cover rounded-2xl shadow-lg">
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-brand-600 via-purple-500 to-red-500 bg-clip-text text-transparent">GUARDIAN PATH</h1>
+                        <p class="text-[10px] text-brand-600 dark:text-brand-400 font-bold tracking-widest uppercase">Decentralized Safety & AI Telemetry</p>
+                    </div>
+                </div>
+                <h2 class="text-3xl font-extrabold tracking-tight leading-tight">Cooperative Prototyping Sandbox</h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                    Interact directly with the simulation frame on the right. Tap the interactive tabs, activate high-impact SOS countdowns with genuine audio feedback, report local street hazards, and query our embedded AI Assistant.
+                </p>
+            </div>
+
+            <!-- Features Quick Console -->
+            <div class="space-y-3 bg-white/45 dark:bg-gray-900/40 p-4 rounded-2xl border border-gray-200/50 dark:border-gray-800/40">
+                <h3 class="text-xs font-bold tracking-wider text-gray-400 uppercase">System Integration Tools</h3>
+                
+                <div class="flex items-center justify-between p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800/50 transition">
+                    <div class="flex items-center gap-3">
+                        <span class="p-2 bg-emerald-500/10 text-emerald-500 rounded-lg"><i data-lucide="activity" class="w-4 h-4"></i></span>
+                        <div class="text-xs">
+                            <p class="font-semibold">Web Audio Engine</p>
+                            <p class="text-[10px] text-gray-500 dark:text-gray-400">Synthesizes real-time sirens</p>
+                        </div>
+                    </div>
+                    <span class="text-[10px] font-mono bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full">ACTIVE</span>
+                </div>
+
+                <div class="flex items-center justify-between p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800/50 transition">
+                    <div class="flex items-center gap-3">
+                        <span class="p-2 bg-purple-500/10 text-purple-500 rounded-lg"><i data-lucide="sparkles" class="w-4 h-4"></i></span>
+                        <div class="text-xs">
+                            <p class="font-semibold">Gemini API Assistant</p>
+                            <p class="text-[10px] text-gray-500 dark:text-gray-400">Calculates responsive vectors</p>
+                        </div>
+                    </div>
+                    <span class="text-[10px] font-mono bg-purple-500/20 text-purple-600 dark:text-purple-400 px-2 py-0.5 rounded-full">LIVE</span>
+                </div>
+
+                <div class="flex items-center justify-between p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800/50 transition">
+                    <div class="flex items-center gap-3">
+                        <span class="p-2 bg-blue-500/10 text-blue-500 rounded-lg"><i data-lucide="map-pinned" class="w-4 h-4"></i></span>
+                        <div class="text-xs">
+                            <p class="font-semibold">Leaflet GIS Engine</p>
+                            <p class="text-[10px] text-gray-500 dark:text-gray-400">Dynamic theme map tracking</p>
+                        </div>
+                    </div>
+                    <span class="text-[10px] font-mono bg-blue-500/20 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-full">Colombo, LKA</span>
+                </div>
+            </div>
+
+            <!-- Global Control Quick-Settings inside desktop panel -->
+            <div class="flex items-center justify-between p-4 bg-gray-100 dark:bg-gray-900 rounded-2xl">
+                <div class="text-xs">
+                    <p class="font-semibold">Aesthetic Sync Theme</p>
+                    <p class="text-gray-400">Dynamic light/dark layouts</p>
+                </div>
+                <button onclick="toggleGlobalTheme()" class="bg-white dark:bg-gray-800 text-gray-800 dark:text-white p-2 rounded-xl border border-gray-200 dark:border-gray-700 shadow flex items-center gap-2 text-xs">
+                    <i data-lucide="sun" class="w-4 h-4 text-amber-500 dark:hidden"></i>
+                    <i data-lucide="moon" class="w-4 h-4 text-purple-400 hidden dark:block"></i>
+                    <span>Toggle Theme</span>
+                </button>
+            </div>
+            
+            <p class="text-[10px] text-gray-400 text-center uppercase tracking-widest font-bold">Black Cap Xtreme • Version 2.0 Prototype</p>
+        </div>
+
+        <!-- RIGHT PANEL: IMMERSIVE DEVICE EMULATOR FOR MOBILE VIEW -->
+        <div class="col-span-1 lg:col-span-7 flex justify-center w-full">
+            <!-- Simulated high-end Smartphone Frame (iPhone 16 styling) -->
+            <div class="relative w-full max-w-[420px] h-[880px] bg-gray-950 rounded-[55px] border-[10px] border-gray-900 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.4)] overflow-hidden flex flex-col z-20">
+                
+                <!-- PHONE GLASS REFLECTION SHEEN -->
+                <div class="absolute inset-0 rounded-[45px] border-[1px] border-white/20 pointer-events-none z-50"></div>
+                
+                <!-- TOP DEVICE NOTCH (DYNAMIC ISLAND SIMULATION) -->
+                <div class="absolute top-2 left-1/2 -translate-x-1/2 w-32 h-7 bg-black rounded-3xl z-50 flex items-center justify-between px-3.5">
+                    <!-- Little camera aperture indicator dots -->
+                    <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" id="island-mic"></div>
+                    <div class="w-2.5 h-2.5 rounded-full bg-slate-900"></div>
+                </div>
+
+                <!-- PHONE TOP BAR / TIME & STATUS -->
+                <div class="h-12 bg-transparent px-8 flex justify-between items-end pb-1.5 text-xs text-gray-900 dark:text-white font-bold tracking-tight z-40 select-none">
+                    <div id="device-clock">9:41</div>
+                    <div class="flex items-center gap-1.5 text-[10px]">
+                        <i data-lucide="signal" class="w-3.5 h-3.5"></i>
+                        <span class="text-[10px] font-semibold">5G</span>
+                        <div class="flex items-center gap-0.5">
+                            <span class="w-5 h-2.5 rounded-sm border border-current flex items-center p-0.5">
+                                <span class="h-full w-4 bg-current rounded-2xs"></span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MAIN SCROLLABLE SMARTPHONE SCREEN WRAPPER -->
+                <div class="flex-1 overflow-y-auto overflow-x-hidden flex flex-col relative bg-gray-50 dark:bg-gray-950 transition-colors duration-300">
+                    
+                    <!-- ==================== SCREEN 1: DYNAMIC HOME & MAP ==================== -->
+                    <div id="view-home" class="app-view active flex flex-col h-full overflow-hidden">
+                        
+                        <!-- Top Navigation Row -->
+                        <div class="px-5 py-3 flex items-center justify-between bg-white/70 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 z-30">
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-brand-500 to-red-500 flex items-center justify-center text-white shadow-sm">
+                                    <i data-lucide="shield" class="w-4 h-4"></i>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] text-gray-400 dark:text-gray-500 font-semibold tracking-wider">Guardian Shield</p>
+                                    <p class="text-xs font-bold text-gray-800 dark:text-gray-100">Pathfinder Active</p>
+                                </div>
+                            </div>
+                            <button onclick="toggleGlobalTheme()" class="p-2 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+                                <i data-lucide="sun" class="w-4 h-4 text-amber-500 dark:hidden"></i>
+                                <i data-lucide="moon" class="w-4 h-4 text-purple-400 hidden dark:block"></i>
+                            </button>
+                        </div>
+
+                        <!-- MAP CANVAS WITH DYNAMIC TILE RENDER -->
+                        <div class="relative w-full h-[320px] flex-shrink-0 z-10">
+                            <!-- Leaflet mount frame -->
+                            <div id="leaflet-map" class="w-full h-full"></div>
+                            
+                            <!-- Overlay Float widgets inside maps -->
+                            <div class="absolute top-3 left-3 z-[1000] flex flex-col gap-2 pointer-events-none">
+                                <div class="glass-panel px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                                    <span class="text-[10px] font-bold text-gray-800 dark:text-white">Colombo 05 Active Tracker</span>
+                                </div>
+                            </div>
+                            
+                            <div class="absolute bottom-3 right-3 z-[1000] flex flex-col gap-1.5">
+                                <button onclick="recenterMap()" class="p-2 bg-white dark:bg-gray-800 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 transition">
+                                    <i data-lucide="navigation-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- SCROLLABLE LIST OF HAZARDS & STATS UNDERNEATH -->
+                        <div class="flex-1 overflow-y-auto px-5 pt-4 pb-20 space-y-4">
+                            
+                            <!-- Dynamic Safety Level Indicator Badge Widget -->
+                            <div class="glass-panel rounded-2xl p-4 flex items-center justify-between shadow-sm">
+                                <div class="space-y-0.5">
+                                    <p class="text-[10px] text-gray-400 dark:text-gray-500 font-bold tracking-wide uppercase">DYNAMIC UI SAFETY SCORE</p>
+                                    <div class="flex items-baseline gap-1">
+                                        <span class="text-3xl font-extrabold text-brand-600 dark:text-brand-400" id="live-score-text">85</span>
+                                        <span class="text-xs text-gray-400">/100</span>
+                                    </div>
+                                    <p class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
+                                        <i data-lucide="shield-check" class="w-3 h-3"></i> Optimized ambient protection active
+                                    </p>
+                                </div>
+                                <div class="w-16 h-16 relative flex items-center justify-center">
+                                    <svg class="w-full h-full transform -rotate-90">
+                                        <circle cx="32" cy="32" r="28" stroke="currentColor" class="text-gray-200 dark:text-gray-800" stroke-width="5" fill="transparent"/>
+                                        <circle cx="32" cy="32" r="28" stroke="currentColor" class="text-brand-500" stroke-width="5" fill="transparent" stroke-dasharray="175" stroke-dashoffset="26" id="score-ring-progress"/>
+                                    </svg>
+                                    <span class="absolute text-xs font-bold text-gray-700 dark:text-gray-300">85%</span>
+                                </div>
+                            </div>
+
+                            <!-- Feed Section Header -->
+                            <div class="flex justify-between items-center">
+                                <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Recent Reports Nearby</h3>
+                                <button onclick="switchView('community')" class="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline">View Feed</button>
+                            </div>
+
+                            <!-- List of Alert Cards (Synchronized with Map) -->
+                            <div class="space-y-3" id="home-recent-feed">
+                                <!-- Cards will load programmatically -->
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <!-- ==================== SCREEN 2: EMERGENCY SOS HUB ==================== -->
+                    <div id="view-sos" class="app-view flex flex-col h-full overflow-hidden px-5 py-4">
+                        
+                        <!-- SOS View Header -->
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>
+                                <h2 class="text-lg font-bold text-gray-900 dark:text-white">Emergency SOS</h2>
+                            </div>
+                            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-100 dark:bg-gray-900 px-2.5 py-1 rounded-full">Encrypted Hub</span>
+                        </div>
+                        
+                        <p class="text-xs text-gray-500 dark:text-gray-400 text-center mb-4">
+                            Manual bypass alerts cascade instant multi-sensor audio telemetry to emergency contacts and live rescue squads.
+                        </p>
+
+                        <!-- BIG SOS TRIGGER SWITCH AREA -->
+                        <div class="flex-1 flex flex-col items-center justify-center relative py-6">
+                            
+                            <!-- Animated Waves while Active or Standard Glow -->
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <div class="absolute w-60 h-60 rounded-full bg-red-500/10 dark:bg-red-500/5 blur-3xl" id="sos-static-glow"></div>
+                                
+                                <!-- Active Countdown Ripples -->
+                                <div class="hidden absolute w-60 h-60 rounded-full bg-red-500/20 border border-red-500/35 sos-ripple-1" id="ripple1"></div>
+                                <div class="hidden absolute w-72 h-72 rounded-full bg-red-500/15 border border-red-500/25 sos-ripple-2" id="ripple2"></div>
+                                <div class="hidden absolute w-80 h-80 rounded-full bg-red-500/10 border border-red-500/15 sos-ripple-3" id="ripple3"></div>
+                            </div>
+
+                            <!-- THE BUTTON -->
+                            <button id="sos-button-main" onclick="startEmergencyTrigger()" class="relative z-10 w-44 h-44 rounded-full bg-gradient-to-br from-red-500 to-rose-700 hover:from-red-600 hover:to-rose-800 flex flex-col items-center justify-center border-[6px] border-red-400/20 shadow-[0_15px_35px_rgba(239,68,68,0.4)] active:scale-95 transition-all duration-300 group">
+                                <div class="absolute inset-0 rounded-full border border-white/20"></div>
+                                <i data-lucide="alert-octagon" class="w-12 h-12 text-white mb-1 group-hover:scale-110 transition-transform duration-300"></i>
+                                <span class="text-xl font-black tracking-widest text-white">S O S</span>
+                                <span class="text-[9px] text-red-200 uppercase font-bold tracking-widest mt-1">Tap to Activate</span>
+                            </button>
+
+                            <!-- Interactive Siren Synth Toggle -->
+                            <div class="mt-6 z-10 flex items-center gap-2">
+                                <button onclick="toggleSirenSynth()" id="siren-toggle-btn" class="px-3 py-1.5 rounded-full bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 flex items-center gap-2 text-xs font-semibold text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white transition">
+                                    <i data-lucide="volume-2" class="w-3.5 h-3.5 text-emerald-500" id="siren-icon"></i>
+                                    <span>Synthesize Audio Siren: ON</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- SOS ACTIVE COUNTDOWN MODAL -->
+                        <div id="sos-active-panel" class="hidden glass-panel rounded-2xl p-4 border border-red-500/30 shadow-xl shadow-red-500/5 mb-4 animate-bounce">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center text-red-500 font-black text-xl animate-ping" id="countdown-digit">10</div>
+                                <div class="flex-1">
+                                    <h4 class="text-xs font-bold text-red-600 dark:text-red-400">High-Priority Alert Initialized</h4>
+                                    <p class="text-[10px] text-gray-500 dark:text-gray-400 leading-snug">Broadcasting live coordinate tracks and secure audio vault recording.</p>
+                                </div>
+                                <button onclick="cancelEmergencyTrigger()" class="bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 text-[10px] font-bold px-3 py-1.5 rounded-lg transition border border-gray-300/40 dark:border-gray-700/40">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- HELPLINE SPEED DIALS MATCHING GRAPHIC -->
+                        <div class="space-y-2 mb-20">
+                            <h3 class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Emergency Helplines</h3>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div onclick="simulateHotlineCall('Police HelpDesk', '100')" class="glass-panel p-3 rounded-xl flex items-center justify-between cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800/40 transition">
+                                    <div class="space-y-0.5">
+                                        <p class="text-[10px] text-gray-400 font-bold leading-none">National Police</p>
+                                        <p class="text-sm font-extrabold text-gray-800 dark:text-white">100</p>
+                                    </div>
+                                    <div class="p-2 rounded-lg bg-blue-500/10 text-blue-500"><i data-lucide="phone" class="w-3.5 h-3.5"></i></div>
+                                </div>
+                                <div onclick="simulateHotlineCall('Women Careline', '181')" class="glass-panel p-3 rounded-xl flex items-center justify-between cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800/40 transition">
+                                    <div class="space-y-0.5">
+                                        <p class="text-[10px] text-gray-400 font-bold leading-none">Women Helpline</p>
+                                        <p class="text-sm font-extrabold text-gray-800 dark:text-white">181</p>
+                                    </div>
+                                    <div class="p-2 rounded-lg bg-rose-500/10 text-rose-500"><i data-lucide="phone" class="w-3.5 h-3.5"></i></div>
+                                </div>
+                                <div onclick="simulateHotlineCall('Ambulance Dispatch', '1990')" class="glass-panel p-3 rounded-xl flex items-center justify-between cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800/40 transition">
+                                    <div class="space-y-0.5">
+                                        <p class="text-[10px] text-gray-400 font-bold leading-none">Suwa Seriya</p>
+                                        <p class="text-sm font-extrabold text-gray-800 dark:text-white">1990</p>
+                                    </div>
+                                    <div class="p-2 rounded-lg bg-emerald-500/10 text-emerald-500"><i data-lucide="phone" class="w-3.5 h-3.5"></i></div>
+                                </div>
+                                <div onclick="simulateHotlineCall('Fire Brigade', '101')" class="glass-panel p-3 rounded-xl flex items-center justify-between cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800/40 transition">
+                                    <div class="space-y-0.5">
+                                        <p class="text-[10px] text-gray-400 font-bold leading-none">Fire Service</p>
+                                        <p class="text-sm font-extrabold text-gray-800 dark:text-white">101</p>
+                                    </div>
+                                    <div class="p-2 rounded-lg bg-amber-500/10 text-amber-500"><i data-lucide="phone" class="w-3.5 h-3.5"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <!-- ==================== SCREEN 3: DECENTRALIZED COMMUNITY FEED ==================== -->
+                    <div id="view-community" class="app-view flex flex-col h-full overflow-hidden">
+                        
+                        <!-- Top Header with Filter -->
+                        <div class="px-5 py-3 flex items-center justify-between bg-white/70 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 z-30">
+                            <h2 class="text-lg font-extrabold text-gray-900 dark:text-white">Community</h2>
+                            <button onclick="toggleFilterDropdown()" class="p-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+                                <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+
+                        <!-- CATEGORY FILTER PILLS SYSTEM (IMAGE 1 SPEC) -->
+                        <div class="px-4 py-2 bg-white/40 dark:bg-gray-950/40 flex items-center gap-1.5 overflow-x-auto whitespace-nowrap border-b border-gray-100 dark:border-gray-800/50">
+                            <button onclick="filterCommunityFeed('All')" class="feed-filter-btn px-4 py-1.5 rounded-full text-xs font-bold bg-brand-600 text-white shadow-sm border border-brand-600/10 transition">All</button>
+                            <button onclick="filterCommunityFeed('Alerts')" class="feed-filter-btn px-4 py-1.5 rounded-full text-xs font-bold bg-transparent text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 transition">Alerts</button>
+                            <button onclick="filterCommunityFeed('Safe Zones')" class="feed-filter-btn px-4 py-1.5 rounded-full text-xs font-bold bg-transparent text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 transition">Safe Zones</button>
+                            <button onclick="filterCommunityFeed('News')" class="feed-filter-btn px-4 py-1.5 rounded-full text-xs font-bold bg-transparent text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 transition">News</button>
+                        </div>
+
+                        <!-- SCROLLABLE FEED CONTAINER -->
+                        <div class="flex-1 overflow-y-auto px-5 py-4 space-y-4 pb-24">
+                            
+                            <!-- MAKE THE COMMUNITY SAFER - DYNAMIC HERO BANNER -->
+                            <div class="relative w-full rounded-2xl bg-gradient-to-tr from-brand-600/10 to-brand-700/20 dark:from-brand-600/20 dark:to-purple-900/30 border border-brand-500/20 p-5 overflow-hidden flex items-center gap-4">
+                                <!-- Background Ambient Light -->
+                                <div class="absolute -right-12 -top-12 w-32 h-32 bg-brand-500/20 rounded-full blur-2xl"></div>
+                                
+                                <div class="flex-1 space-y-2 z-10">
+                                    <h3 class="text-sm font-extrabold text-brand-900 dark:text-brand-300">Make the community safer</h3>
+                                    <p class="text-[10px] text-brand-700 dark:text-brand-400 leading-relaxed font-medium">Report hazardous settings, broken infrastructure lights, or suspicious trails immediately.</p>
+                                    <button onclick="openReportModal()" class="px-4 py-2 bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-700 hover:to-brand-800 text-white text-[10px] font-extrabold rounded-xl shadow-md shadow-brand-500/20 transition-all flex items-center gap-1">
+                                        <span>Report Now</span>
+                                        <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                </div>
+                                
+                                <!-- CUSTOM SVG SHIELD ILLUSTRATION MATCHING IMAGE 1 -->
+                                <div class="w-24 h-24 flex-shrink-0 z-10 select-none">
+                                    <svg viewBox="0 0 100 100" fill="none" class="w-full h-full drop-shadow-[0_4px_12px_rgba(124,58,237,0.15)]">
+                                        <!-- Purple Glowing Shield -->
+                                        <path d="M50 15 L80 25 C80 50, 65 75, 50 85 C35 75, 20 50, 20 25 Z" fill="url(#purpleGrad)" />
+                                        <!-- White Community Icons in center -->
+                                        <g stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round">
+                                            <!-- Center head -->
+                                            <circle cx="50" cy="42" r="6" fill="white" />
+                                            <!-- Center body -->
+                                            <path d="M40 58 C40 50, 60 50, 60 58" fill="white" />
+                                            <!-- Left head -->
+                                            <circle cx="38" cy="46" r="4.5" fill="white" opacity="0.8" />
+                                            <!-- Left body -->
+                                            <path d="M30 60 C30 54, 46 54, 46 60" fill="white" opacity="0.8" />
+                                            <!-- Right head -->
+                                            <circle cx="62" cy="46" r="4.5" fill="white" opacity="0.8" />
+                                            <!-- Right body -->
+                                            <path d="M54 60 C54 54, 70 54, 70 60" fill="white" opacity="0.8" />
+                                        </g>
+                                        <!-- Gradients declarations -->
+                                        <defs>
+                                            <linearGradient id="purpleGrad" x1="0" y1="0" x2="100" y2="100">
+                                                <stop offset="0%" stop-color="#8b5cf6" />
+                                                <stop offset="100%" stop-color="#6d28d9" />
+                                            </linearGradient>
+                                        </defs>
+                                    </svg>
+                                </div>
+                            </div>
+
+                            <!-- COMMUNITY DYNAMIC STACK -->
+                            <div class="space-y-3.5" id="community-main-feed">
+                                <!-- Cards will load programmatically -->
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <!-- ==================== SCREEN 4: AI SAFETY COMPANION ==================== -->
+                    <div id="view-assistant" class="app-view flex flex-col h-full overflow-hidden bg-white dark:bg-gray-950">
+                        
+                        <!-- Header with dynamic API state indicators -->
+                        <div class="px-5 py-3.5 flex items-center justify-between border-b border-gray-100 dark:border-gray-800">
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center">
+                                    <i data-lucide="sparkles" class="w-4 h-4"></i>
+                                </div>
+                                <div>
+                                    <h2 class="text-sm font-bold text-gray-900 dark:text-white">Safety Companion</h2>
+                                    <p class="text-[9px] text-emerald-500 font-bold flex items-center gap-0.5">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Gemini AI Engine active
+                                    </p>
+                                </div>
+                            </div>
+                            <span class="text-[9px] font-mono bg-gray-100 dark:bg-gray-900 text-gray-500 px-2 py-0.5 rounded-full">2.5 Flash</span>
+                        </div>
+
+                        <!-- CHAT VIEW MESSAGES FRAME -->
+                        <div class="flex-1 overflow-y-auto px-4 py-4 space-y-3" id="assistant-chat-box">
+                            
+                            <!-- Initial Welcome Bot Bubble -->
+                            <div class="flex gap-2.5 items-start max-w-[85%]">
+                                <div class="w-6 h-6 rounded-lg bg-purple-500/10 text-purple-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <i data-lucide="bot" class="w-3.5 h-3.5"></i>
+                                </div>
+                                <div class="p-3 rounded-2xl bg-gray-100 dark:bg-gray-900 text-xs text-gray-800 dark:text-gray-200 leading-relaxed font-medium">
+                                    Hi! I'm your integrated safety AI. Ask me for instant directions to safe public shelters, first-aid instructions, local safety forecasts, or your immediate safety status.
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- INPUT TRAY -->
+                        <div class="p-3 border-t border-gray-100 dark:border-gray-800 bg-white/80 dark:bg-gray-900/80 backdrop-blur flex items-center gap-2 mb-20">
+                            <input type="text" id="ai-chat-input" onkeydown="handleChatKey(event)" placeholder="Search safe paths, ask first aid..." class="flex-1 bg-gray-50 dark:bg-gray-950 text-xs rounded-xl px-3.5 py-2.5 border border-gray-200 dark:border-gray-800 text-gray-800 dark:text-gray-100 focus:outline-none focus:border-brand-500 dark:focus:border-brand-400 font-medium">
+                            <button onclick="sendChatMessage()" class="p-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white transition flex items-center justify-center shadow-md shadow-brand-500/10">
+                                <i data-lucide="send" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+
+
+                    <!-- ==================== SCREEN 5: USER CONTROLS & PROFILE ==================== -->
+                    <div id="view-profile" class="app-view flex flex-col h-full overflow-hidden px-5 py-4">
+                        
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-600 to-rose-500 flex items-center justify-center font-bold text-lg text-white shadow-md">
+                                AP
+                            </div>
+                            <div>
+                                <h2 class="text-base font-extrabold text-gray-900 dark:text-white">Anura Perera</h2>
+                                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Level 3 Safety Contributor</p>
+                            </div>
+                        </div>
+
+                        <div class="flex-1 overflow-y-auto space-y-4 pb-20">
+                            
+                            <!-- Personal Trusted Emergency Circle -->
+                            <div class="glass-panel rounded-2xl p-4 space-y-3 shadow-sm">
+                                <div class="flex justify-between items-center">
+                                    <h3 class="text-xs font-bold uppercase text-gray-400">Emergency Contacts</h3>
+                                    <button onclick="openAddContactModal()" class="text-[10px] font-extrabold text-brand-600 dark:text-brand-400 flex items-center gap-0.5">
+                                        <i data-lucide="plus" class="w-3 h-3"></i> Add New
+                                    </button>
+                                </div>
+                                <div class="space-y-2" id="contacts-list-container">
+                                    <!-- Contacts list loads dynamically -->
+                                </div>
+                            </div>
+
+                            <!-- System Configuration List -->
+                            <div class="glass-panel rounded-2xl p-4 space-y-2.5 shadow-sm">
+                                <h3 class="text-xs font-bold uppercase text-gray-400 mb-1">Ecosystem Config</h3>
+                                
+                                <div class="flex items-center justify-between py-1 border-b border-gray-100 dark:border-gray-800/40 pb-2">
+                                    <div class="space-y-0.5">
+                                        <p class="text-xs font-bold text-gray-800 dark:text-gray-200">Light / Dark Theme Mode</p>
+                                        <p class="text-[9px] text-gray-400">Match design to ambient system status</p>
+                                    </div>
+                                    <button onclick="toggleGlobalTheme()" class="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white border border-gray-200 dark:border-gray-700 flex items-center gap-1.5 text-[11px] font-semibold">
+                                        <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-brand-500"></i> Toggle
+                                    </button>
+                                </div>
+
+                                <div class="flex items-center justify-between py-1">
+                                    <div class="space-y-0.5">
+                                        <p class="text-xs font-bold text-gray-800 dark:text-gray-200">Ambient Safety Micro-Audio</p>
+                                        <p class="text-[9px] text-gray-400">Permit instant auto-record archives when SOS is active</p>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" checked class="sr-only peer">
+                                        <div class="w-9 h-5 bg-gray-200 dark:bg-gray-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-brand-600"></div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- SIMULATED SYSTEM NAVIGATION PILL WITH FLOATING SOS INTEGRATION (IMAGE 1 SPEC) -->
+                <div class="absolute bottom-0 inset-x-0 h-20 bg-white/90 dark:bg-gray-950/90 backdrop-blur-md border-t border-gray-100 dark:border-gray-900 z-40 px-5 flex items-center justify-between text-gray-500 dark:text-gray-400">
+                    
+                    <!-- HOME TRAY BUTTON -->
+                    <button onclick="switchView('home')" id="bottom-nav-home" class="flex flex-col items-center gap-1 flex-1 active text-brand-600 dark:text-brand-400">
+                        <i data-lucide="map" class="w-5 h-5"></i>
+                        <span class="text-[9px] font-bold">Map</span>
+                    </button>
+
+                    <!-- COMMUNITY TRAY BUTTON -->
+                    <button onclick="switchView('community')" id="bottom-nav-community" class="flex flex-col items-center gap-1 flex-1 hover:text-gray-800 dark:hover:text-white transition">
+                        <i data-lucide="users" class="w-5 h-5"></i>
+                        <span class="text-[9px] font-bold">Community</span>
+                    </button>
+
+                    <!-- ACTIVE SOS FLOATING CENTER KEY (ELEVATED CIRCLE FROM IMAGE 1) -->
+                    <div class="relative w-14 h-14 flex items-center justify-center -translate-y-4 flex-shrink-0 z-50">
+                        <!-- Ripple backdrop glowing ring -->
+                        <div class="absolute inset-0 bg-red-500/20 rounded-full animate-ping"></div>
+                        <button onclick="switchView('sos')" id="bottom-nav-sos" class="w-14 h-14 rounded-full bg-red-600 text-white flex flex-col items-center justify-center shadow-lg hover:bg-red-700 transition relative">
+                            <i data-lucide="phone-call" class="w-5 h-5"></i>
+                            <span class="text-[8px] font-extrabold tracking-widest mt-0.5">SOS</span>
+                        </button>
+                    </div>
+
+                    <!-- ASSISTANT TRAY BUTTON -->
+                    <button onclick="switchView('assistant')" id="bottom-nav-assistant" class="flex flex-col items-center gap-1 flex-1 hover:text-gray-800 dark:hover:text-white transition">
+                        <i data-lucide="messages-square" class="w-5 h-5"></i>
+                        <span class="text-[9px] font-bold">Assistant</span>
+                    </button>
+
+                    <!-- PROFILE TRAY BUTTON -->
+                    <button onclick="switchView('profile')" id="bottom-nav-profile" class="flex flex-col items-center gap-1 flex-1 hover:text-gray-800 dark:hover:text-white transition">
+                        <i data-lucide="user" class="w-5 h-5"></i>
+                        <span class="text-[9px] font-bold">Profile</span>
+                    </button>
+
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- ==================== DIALOG 1: HOTLINE SIMULATION SCREEN ==================== -->
+    <div id="hotline-simulation-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-[1000] flex items-center justify-center p-4">
+        <div class="w-full max-w-sm bg-gray-950 rounded-3xl p-6 text-center space-y-6 border border-white/10 text-white">
+            <div class="space-y-1.5">
+                <p class="text-[10px] text-brand-400 font-bold uppercase tracking-widest">Active Dispatch Link</p>
+                <h3 id="simulation-hotline-name" class="text-xl font-extrabold">Ambulance Hub</h3>
+                <p id="simulation-hotline-number" class="text-sm text-gray-500 font-bold">1990</p>
+            </div>
+            
+            <!-- Animated calling avatar sphere -->
+            <div class="flex justify-center py-4">
+                <div class="relative w-28 h-28 flex items-center justify-center">
+                    <div class="absolute inset-0 bg-brand-500/10 border border-brand-500/20 rounded-full animate-ping"></div>
+                    <div class="w-24 h-24 rounded-full bg-gradient-to-tr from-brand-600 to-rose-600 flex items-center justify-center text-white text-3xl font-black">
+                        <i data-lucide="phone-incoming" class="w-10 h-10 text-white"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calling Status details -->
+            <p id="simulation-call-status" class="text-xs text-gray-400 tracking-wide font-medium">Connecting route telecommunications...</p>
+
+            <!-- Decline Action -->
+            <button onclick="terminateHelplineCall()" class="w-full py-3 bg-red-600 hover:bg-red-700 rounded-2xl text-xs font-bold tracking-wider transition shadow-lg shadow-red-500/10">
+                Decline & End Call
+            </button>
+        </div>
+    </div>
+
+
+    <!-- ==================== DIALOG 2: SUBMIT VERIFIED CROWD REPORT ==================== -->
+    <div id="report-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[1000] flex items-center justify-center p-4">
+        <div class="w-full max-w-md glass-panel rounded-3xl p-6 space-y-4 text-gray-800 dark:text-gray-100">
+            <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="file-plus-2" class="w-5 h-5 text-brand-600 dark:text-brand-400"></i>
+                    <h3 class="text-base font-bold">Submit Verified Incident</h3>
+                </div>
+                <button onclick="closeReportModal()" class="p-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-400 hover:text-gray-600 transition">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-3.5 text-xs">
+                <div>
+                    <label class="block text-gray-400 font-bold mb-1 uppercase tracking-wider text-[9px]">Classification Type</label>
+                    <select id="new-report-type" class="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-3 text-xs font-semibold focus:outline-none focus:border-brand-500 text-gray-800 dark:text-gray-100">
+                        <option value="Caution">Caution (Infrastructure defect, poor lighting)</option>
+                        <option value="High Risk">High Risk (Suspicious pursuit, active tracking)</option>
+                        <option value="Safe">Safe (Verified secure shelter, police presence)</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-gray-400 font-bold mb-1 uppercase tracking-wider text-[9px]">Headline Title</label>
+                    <input id="new-report-title" type="text" placeholder="e.g., Construction area no lighting" class="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-3 text-xs font-semibold focus:outline-none focus:border-brand-500 text-gray-800 dark:text-gray-100">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-gray-400 font-bold mb-1 uppercase tracking-wider text-[9px]">Latitude Offset</label>
+                        <input id="new-report-lat" type="number" step="0.0001" value="6.9015" class="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-3 text-xs font-semibold focus:outline-none focus:border-brand-500 text-gray-800 dark:text-gray-100">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 font-bold mb-1 uppercase tracking-wider text-[9px]">Longitude Offset</label>
+                        <input id="new-report-lng" type="number" step="0.0001" value="79.9140" class="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-3 text-xs font-semibold focus:outline-none focus:border-brand-500 text-gray-800 dark:text-gray-100">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-gray-400 font-bold mb-1 uppercase tracking-wider text-[9px]">Report Description Summary</label>
+                    <textarea id="new-report-desc" rows="3" placeholder="Explain nearby ambient warnings. Avoid personal names..." class="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-3 text-xs font-semibold focus:outline-none focus:border-brand-500 text-gray-800 dark:text-gray-100"></textarea>
+                </div>
+            </div>
+
+            <div class="pt-2">
+                <button onclick="submitVerifiedCommunityReport()" class="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl shadow-md shadow-brand-500/20 transition">
+                    Broadcasting Live Incident Coordinates
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ==================== DIALOG 3: ADD NEW CONTACT ==================== -->
+    <div id="add-contact-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[1000] flex items-center justify-center p-4">
+        <div class="w-full max-w-sm glass-panel rounded-3xl p-6 space-y-4 text-gray-800 dark:text-gray-100">
+            <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="user-plus" class="w-5 h-5 text-brand-600 dark:text-brand-400"></i>
+                    <h3 class="text-sm font-bold">Add New Emergency Contact</h3>
+                </div>
+                <button onclick="closeAddContactModal()" class="p-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-400 hover:text-gray-600 transition">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-gray-400 font-semibold mb-1">Full Name</label>
+                    <input id="new-contact-name" type="text" placeholder="e.g., Priyantha Perera" class="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-3 text-xs focus:outline-none focus:border-brand-500 text-gray-800 dark:text-gray-100">
+                </div>
+                <div>
+                    <label class="block text-gray-400 font-semibold mb-1">Phone Number</label>
+                    <input id="new-contact-phone" type="tel" placeholder="e.g., +94 77 123 4567" class="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-3 text-xs focus:outline-none focus:border-brand-500 text-gray-800 dark:text-gray-100">
+                </div>
+                <div>
+                    <label class="block text-gray-400 font-semibold mb-1">Alert Relation Link</label>
+                    <input id="new-contact-relation" type="text" placeholder="e.g., Uncle, Mother, Neighbor" class="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-3 text-xs focus:outline-none focus:border-brand-500 text-gray-800 dark:text-gray-100">
+                </div>
+            </div>
+
+            <button onclick="saveNewContact()" class="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl shadow-lg shadow-brand-500/15 transition">
+                Pin Contact to Dynamic Circle
+            </button>
+        </div>
+    </div>
+
+
+    <!-- Load local runtime config (ignored) -->
+    <script src="config.js"></script>
+
+    <!-- SYSTEM CORE LOGIC ENGINE -->
+    <script>
+        // Set dynamic clock based on system time
+        function updateClock() {
+            const now = new Date();
+            let hours = now.getHours();
+            let minutes = now.getMinutes();
+            hours = hours < 10 ? '0' + hours : hours;
+            minutes = minutes < 10 ? '0' + minutes : minutes;
+            document.getElementById('device-clock').innerText = `${hours}:${minutes}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Gemini API Configuration
+        // Allow runtime injection for local testing via:
+        // 1) window.__GP_API_KEY (set in console before use)
+        // 2) <meta name="gp-api-key" content="..."> in the HTML head
+        // 3) URL parameter ?gp_api_key=YOUR_KEY
+        let apiKey = "";
+        try {
+            if (window.__GP_API_KEY) apiKey = window.__GP_API_KEY;
+            const metaKey = document.querySelector('meta[name="gp-api-key"]');
+            if (!apiKey && metaKey) apiKey = metaKey.getAttribute('content') || '';
+            const urlKey = new URLSearchParams(window.location.search).get('gp_api_key');
+            if (!apiKey && urlKey) apiKey = urlKey;
+        } catch (e) {
+            // Ignore any access errors in restricted environments
+        }
+
+        // Global State variables
+        let activeTheme = 'light';
+        let leafletMap = null;
+        let mapMarkers = [];
+        let activeView = 'home';
+        let currentFilter = 'All';
+
+        // Preloaded Initial incidents data exactly matching the mockup list + coordinate telemetry
+        let reportsData = [
+            {
+                id: 1,
+                title: "Poorly lit street reported",
+                category: "Caution",
+                timeAgo: "2 mins ago",
+                distance: "0.4 km away",
+                desc: "Street lights completely out on secondary road past the transit point.",
+                lat: 6.899,
+                lng: 79.910,
+                thumbType: 'streetlamp'
+            },
+            {
+                id: 2,
+                title: "Suspicious tracking behavior observed",
+                category: "High Risk",
+                timeAgo: "15 mins ago",
+                distance: "1.2 km away",
+                desc: "Two individuals loitering near the dark transit platform pathways checking commuters.",
+                lat: 6.904,
+                lng: 79.918,
+                thumbType: 'suspicious'
+            },
+            {
+                id: 3,
+                title: "Area marked safe by community",
+                category: "Safe",
+                timeAgo: "1 hour ago",
+                distance: "3.1 km away",
+                desc: "Patrolled vectors confirmed highly illuminated with active personnel.",
+                lat: 6.895,
+                lng: 79.923,
+                thumbType: 'safe'
+            },
+            {
+                id: 4,
+                title: "Construction area no lighting",
+                category: "Caution",
+                timeAgo: "2 hours ago",
+                distance: "2.8 km away",
+                desc: "Heavy machinery and pits left unguarded without active caution indicators.",
+                lat: 6.907,
+                lng: 79.909,
+                thumbType: 'construction'
+            }
+        ];
+
+        // Emergency Contacts Data
+        let emergencyContacts = [
+            { id: 1, name: "Priyantha Perera", phone: "+94 77 234 5678", relation: "Father" },
+            { id: 2, name: "Sita Kotte", phone: "+94 71 876 5432", relation: "Mother" }
+        ];
+
+        // SVG Render Generators for report items (making the app entirely self-contained without broken images!)
+        const SVG_THUMBNAILS = {
+            streetlamp: `
+                <svg viewBox="0 0 100 100" class="w-full h-full rounded-2xl bg-slate-900">
+                    <rect width="100" height="100" fill="#0f172a" />
+                    <!-- Streetlamp pole -->
+                    <path d="M70 90 L70 30 Q70 20, 50 20 Q40 20, 42 28" stroke="#475569" stroke-width="3" fill="none" />
+                    <!-- Lamp head -->
+                    <ellipse cx="44" cy="28" rx="8" ry="4" fill="#64748b" />
+                    <!-- Light Beam Glow -->
+                    <polygon points="44,30 10,95 80,95" fill="url(#yellowBeam)" opacity="0.4" />
+                    <defs>
+                        <linearGradient id="yellowBeam" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="#fbbf24" />
+                            <stop offset="100%" stop-color="#0f172a" stop-opacity="0" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+            `,
+            suspicious: `
+                <svg viewBox="0 0 100 100" class="w-full h-full rounded-2xl bg-slate-950">
+                    <rect width="100" height="100" fill="#020617" />
+                    <!-- Moon -->
+                    <circle cx="80" cy="25" r="8" fill="#e2e8f0" opacity="0.8" />
+                    <!-- Moody Window glow in background -->
+                    <rect x="15" y="40" width="12" height="20" fill="#fef08a" opacity="0.15" />
+                    <rect x="35" y="55" width="12" height="20" fill="#fef08a" opacity="0.25" />
+                    <!-- Stylized Suspicious Silhouette Figures -->
+                    <path d="M48 85 C48 70, 58 70, 58 85 Z" fill="#1e293b" />
+                    <circle cx="53" cy="65" r="4.5" fill="#1e293b" />
+                    
+                    <path d="M62 88 C62 72, 72 72, 72 88 Z" fill="#0f172a" />
+                    <circle cx="67" cy="67" r="4.5" fill="#0f172a" />
+                    
+                    <!-- Alert dynamic rings around characters -->
+                    <ellipse cx="60" cy="83" rx="15" ry="5" stroke="#ef4444" stroke-width="1.5" fill="none" opacity="0.7" />
+                </svg>
+            `,
+            safe: `
+                <svg viewBox="0 0 100 100" class="w-full h-full rounded-2xl bg-emerald-950">
+                    <rect width="100" height="100" fill="#022c22" />
+                    <!-- Sun rays / Morning Sky -->
+                    <polygon points="50,0 20,100 80,100" fill="#10b981" opacity="0.1" />
+                    <!-- Lush trees -->
+                    <circle cx="35" cy="65" r="15" fill="#065f46" />
+                    <circle cx="65" cy="65" r="18" fill="#064e3b" />
+                    <rect x="32" y="70" width="6" height="20" fill="#1e293b" />
+                    <rect x="62" y="75" width="6" height="15" fill="#1e293b" />
+                    <!-- Pathway -->
+                    <polygon points="50,60 35,95 65,95" fill="#334155" />
+                    <!-- Glowing Safe badge -->
+                    <circle cx="50" cy="40" r="10" fill="#10b981" />
+                    <path d="M47 40 L49 42 L53 38" stroke="white" stroke-width="2" stroke-linecap="round" fill="none" />
+                </svg>
+            `,
+            construction: `
+                <svg viewBox="0 0 100 100" class="w-full h-full rounded-2xl bg-amber-950">
+                    <rect width="100" height="100" fill="#451a03" />
+                    <!-- Crane framework silhouette -->
+                    <line x1="20" y1="90" x2="45" y2="20" stroke="#78350f" stroke-width="4" />
+                    <line x1="45" y1="20" x2="90" y2="20" stroke="#78350f" stroke-width="3" />
+                    <line x1="15" y1="90" x2="85" y2="90" stroke="#78350f" stroke-width="4" />
+                    <!-- Orange Warning stripes -->
+                    <polygon points="0,75 15,90 25,90 10,75" fill="#fbbf24" />
+                    <polygon points="25,75 40,90 50,90 35,75" fill="#fbbf24" />
+                    <polygon points="50,75 65,90 75,90 60,75" fill="#fbbf24" />
+                    <!-- Danger exclamation flag -->
+                    <triangle points="45,40 55,45 45,50" fill="#ef4444" />
+                    <circle cx="48" cy="45" r="5" fill="#f97316" />
+                </svg>
+            `
+        };
+
+        // Initialize Leaflet Map Instance
+        function initSafetyMap() {
+            if (leafletMap) return;
+
+            // Coordinates for Sri Jayawardenepura Kotte, Colombo, Sri Lanka
+            const defaultCoord = [6.9015, 79.9140];
+            
+            // Generate map container
+            leafletMap = L.map('leaflet-map', {
+                center: defaultCoord,
+                zoom: 14,
+                    zoomControl: false,
+                    attributionControl: true
+            });
+
+            // Set dynamic tile set based on active theme
+            updateMapTiles();
+
+            // Load existing hazard markers onto map canvas
+            loadMapMarkers();
+        }
+
+        // Manage Map Tiles styling dynamically for Light and Dark mode
+        function updateMapTiles() {
+            if (!leafletMap) return;
+            
+            // Clean active Tile layers
+            leafletMap.eachLayer((layer) => {
+                if (layer instanceof L.TileLayer) {
+                    leafletMap.removeLayer(layer);
+                }
+            });
+
+            // Use OpenStreetMap for light theme and Carto Dark tiles for dark theme
+            const tileUrl = activeTheme === 'dark'
+                ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+                : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+
+            const attribution = activeTheme === 'dark'
+                ? '&copy; <a href="https://carto.com/">CARTO</a>'
+                : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+
+            L.tileLayer(tileUrl, {
+                maxZoom: 19,
+                attribution: attribution
+            }).addTo(leafletMap);
+        }
+
+        // Add preloaded alert pins as Leaflet markers
+        function loadMapMarkers() {
+            if (!leafletMap) return;
+
+            // Clear existing
+            mapMarkers.forEach(m => leafletMap.removeLayer(m));
+            mapMarkers = [];
+
+            reportsData.forEach(rep => {
+                const colorHex = rep.category === 'High Risk' ? '#ef4444' : (rep.category === 'Safe' ? '#10b981' : '#f59e0b');
+                
+                // Construct a customized vector circular pin marker
+                const customSVG = `
+                    <div class="relative w-8 h-8 flex items-center justify-center animate-[pulse_2s_infinite]">
+                        <span class="absolute w-full h-full rounded-full opacity-20" style="background-color: ${colorHex}"></span>
+                        <span class="absolute w-5 h-5 rounded-full border-2 border-white shadow-lg flex items-center justify-center" style="background-color: ${colorHex}">
+                            <i data-lucide="${rep.category === 'High Risk' ? 'octagon' : (rep.category === 'Safe' ? 'shield-check' : 'alert-triangle')}" class="w-3 h-3 text-white"></i>
+                        </span>
+                    </div>
+                `;
+
+                const markerIcon = L.divIcon({
+                    html: customSVG,
+                    className: 'custom-leaflet-marker',
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 16]
+                });
+
+                const marker = L.marker([rep.lat, rep.lng], { icon: markerIcon })
+                    .bindPopup(`
+                        <div class="text-xs p-1">
+                            <p class="font-extrabold uppercase tracking-widest text-[9px]" style="color: ${colorHex}">${rep.category}</p>
+                            <h4 class="font-bold text-gray-800 dark:text-white mt-0.5">${rep.title}</h4>
+                            <p class="text-gray-500 dark:text-gray-400 text-[10px] mt-1 leading-snug">${rep.desc}</p>
+                        </div>
+                    `)
+                    .addTo(leafletMap);
+
+                mapMarkers.push(marker);
+            });
+        }
+
+        function recenterMap() {
+            if (leafletMap) {
+                leafletMap.setView([6.9015, 79.9140], 14);
+                playInteractionClick();
+            }
+        }
+
+        // Web Audio API Synth parameters
+        let audioCtx = null;
+        let sirenOscillator = null;
+        let sirenOscillatorLFO = null;
+        let sirenGainNode = null;
+        let isSirenActive = false;
+        let allowSirenSynth = true;
+
+        // Toggle Audio Synth state
+        function toggleSirenSynth() {
+            allowSirenSynth = !allowSirenSynth;
+            const btn = document.getElementById('siren-toggle-btn');
+            const icon = document.getElementById('siren-icon');
+            
+            if (allowSirenSynth) {
+                btn.innerHTML = `<i data-lucide="volume-2" class="w-3.5 h-3.5 text-emerald-500" id="siren-icon"></i><span>Synthesize Audio Siren: ON</span>`;
+            } else {
+                btn.innerHTML = `<i data-lucide="volume-x" class="w-3.5 h-3.5 text-red-500" id="siren-icon"></i><span>Synthesize Audio Siren: OFF</span>`;
+                // Turn off immediately if currently screaming
+                silenceSirenSynth();
+            }
+            lucide.createIcons();
+            playInteractionClick();
+        }
+
+        // Activate Emergency audio alarm using Audio Synthesis (No external files needed!)
+        function triggerSirenSynth() {
+            if (!allowSirenSynth) return;
+            try {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+
+                sirenOscillator = audioCtx.createOscillator();
+                sirenOscillatorLFO = audioCtx.createOscillator();
+                sirenGainNode = audioCtx.createGain();
+                
+                const lfoGain = audioCtx.createGain();
+
+                sirenOscillator.type = 'sawtooth';
+                sirenOscillator.frequency.setValueAtTime(600, audioCtx.currentTime); // Base warning frequency
+
+                sirenOscillatorLFO.type = 'sine';
+                sirenOscillatorLFO.frequency.setValueAtTime(2.5, audioCtx.currentTime); // Wave rate sweep (LFO)
+                lfoGain.gain.setValueAtTime(250, audioCtx.currentTime); // High/low variance width
+
+                sirenOscillatorLFO.connect(lfoGain);
+                lfoGain.connect(sirenOscillator.frequency);
+
+                sirenOscillator.connect(sirenGainNode);
+                sirenGainNode.connect(audioCtx.destination);
+                
+                sirenGainNode.gain.setValueAtTime(0.12, audioCtx.currentTime);
+
+                sirenOscillator.start();
+                sirenOscillatorLFO.start();
+                isSirenActive = true;
+            } catch(e) {
+                console.log("Audio synthesis error: ", e);
+            }
+        }
+
+        function silenceSirenSynth() {
+            if (sirenOscillator) {
+                try {
+                    sirenOscillator.stop();
+                    sirenOscillatorLFO.stop();
+                } catch(e) {}
+                sirenOscillator = null;
+                sirenOscillatorLFO = null;
+            }
+            isSirenActive = false;
+        }
+
+        // Subtle UI tap feedback synthesizer
+        function playInteractionClick() {
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.01, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.08);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.08);
+            } catch(e){}
+        }
+
+        // Dynamic State Navigation Screens
+        function switchView(viewId) {
+            playInteractionClick();
+            
+            // Deactivate all
+            document.querySelectorAll('.app-view').forEach(view => {
+                view.classList.remove('active');
+            });
+            document.querySelectorAll('[id^="bottom-nav-"]').forEach(btn => {
+                btn.classList.remove('text-brand-600', 'dark:text-brand-400');
+                btn.classList.add('text-gray-500', 'dark:text-gray-400', 'hover:text-gray-800', 'dark:hover:text-white');
+            });
+
+            // Activate Target
+            const targetView = document.getElementById(`view-${viewId}`);
+            if (targetView) {
+                targetView.classList.add('active');
+            }
+            
+            const targetNav = document.getElementById(`bottom-nav-${viewId}`);
+            if (targetNav) {
+                targetNav.classList.add('text-brand-600', 'dark:text-brand-400');
+                targetNav.classList.remove('text-gray-500', 'dark:text-gray-400');
+            }
+
+            activeView = viewId;
+
+            // Trigger map resize check to load dynamic grid scales correctly
+            if (viewId === 'home') {
+                setTimeout(() => {
+                    if (leafletMap) leafletMap.invalidateSize();
+                }, 100);
+            }
+        }
+
+        // Render Home & Community feeds dynamically based on state
+        function renderFeedLists() {
+            const homeFeedContainer = document.getElementById('home-recent-feed');
+            const communityFeedContainer = document.getElementById('community-main-feed');
+            
+            homeFeedContainer.innerHTML = '';
+            communityFeedContainer.innerHTML = '';
+
+            // Filter feeds depending on current tab selection
+            const filteredReports = reportsData.filter(rep => {
+                if (currentFilter === 'All') return true;
+                if (currentFilter === 'Alerts' && (rep.category === 'Caution' || rep.category === 'High Risk')) return true;
+                if (currentFilter === 'Safe Zones' && rep.category === 'Safe') return true;
+                if (currentFilter === 'News') return false; // Simulated upcoming agency items
+                return true;
+            });
+
+            // Populate top 2 on Home feed
+            const homeReports = reportsData.slice(0, 3);
+            homeReports.forEach(rep => {
+                const badgeColorClass = rep.category === 'High Risk' ? 'bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 border-red-200/50' : (rep.category === 'Safe' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border-emerald-200/50' : 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border-amber-200/50');
+                
+                const card = document.createElement('div');
+                card.className = "glass-panel rounded-2xl p-3.5 flex justify-between items-center gap-3 cursor-pointer hover:scale-[1.01] transition-transform";
+                card.onclick = () => {
+                    switchView('home');
+                    if (leafletMap) leafletMap.setView([rep.lat, rep.lng], 15);
+                };
+
+                card.innerHTML = `
+                    <div class="flex-1 space-y-1">
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <span class="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${badgeColorClass}">${rep.category}</span>
+                            <span class="text-[9px] text-gray-400 font-semibold">${rep.timeAgo} &bull; ${rep.distance}</span>
+                        </div>
+                        <h4 class="text-xs font-bold text-gray-800 dark:text-gray-100">${rep.title}</h4>
+                        <p class="text-[10px] text-gray-400 leading-snug line-clamp-1">${rep.desc}</p>
+                    </div>
+                    <div class="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 select-none">
+                        ${SVG_THUMBNAILS[rep.thumbType] || SVG_THUMBNAILS.streetlamp}
+                    </div>
+                `;
+                homeFeedContainer.appendChild(card);
+            });
+
+            // Populate main Community feed matching Image 1
+            filteredReports.forEach(rep => {
+                const badgeColorClass = rep.category === 'High Risk' ? 'bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 border-red-200/50' : (rep.category === 'Safe' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border-emerald-200/50' : 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border-amber-200/50');
+
+                const card = document.createElement('div');
+                card.className = "glass-panel rounded-2xl p-4 flex justify-between items-start gap-4 hover:shadow-md transition-shadow";
+                card.innerHTML = `
+                    <div class="flex-1 space-y-1.5">
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-[9px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${badgeColorClass}">${rep.category}</span>
+                            <span class="text-[10px] text-gray-400 font-bold">${rep.timeAgo} &bull; ${rep.distance}</span>
+                        </div>
+                        <h4 class="text-xs font-bold text-gray-800 dark:text-gray-100 leading-tight">${rep.title}</h4>
+                        <p class="text-[10px] text-gray-500 dark:text-gray-400 leading-relaxed font-medium">${rep.desc}</p>
+                        
+                        <div class="flex items-center gap-3 pt-1">
+                            <button onclick="upvoteIncident(${rep.id})" class="flex items-center gap-1 text-[10px] text-gray-400 hover:text-brand-600 font-bold">
+                                <i data-lucide="thumbs-up" class="w-3.5 h-3.5"></i>
+                                <span>Verify</span>
+                            </button>
+                            <button onclick="zoomToIncident(${rep.lat}, ${rep.lng})" class="flex items-center gap-1 text-[10px] text-gray-400 hover:text-brand-600 font-bold">
+                                <i data-lucide="map-pin" class="w-3.5 h-3.5"></i>
+                                <span>Track</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="w-16 h-16 rounded-2xl overflow-hidden flex-shrink-0">
+                        ${SVG_THUMBNAILS[rep.thumbType] || SVG_THUMBNAILS.streetlamp}
+                    </div>
+                `;
+                communityFeedContainer.appendChild(card);
+            });
+
+            lucide.createIcons();
+        }
+
+        function filterCommunityFeed(categoryName) {
+            currentFilter = categoryName;
+            
+            // Style active pill state
+            document.querySelectorAll('.feed-filter-btn').forEach(btn => {
+                if (btn.innerText === categoryName) {
+                    btn.className = "feed-filter-btn px-4 py-1.5 rounded-full text-xs font-bold bg-brand-600 text-white shadow-sm border border-brand-600/10 transition";
+                } else {
+                    btn.className = "feed-filter-btn px-4 py-1.5 rounded-full text-xs font-bold bg-transparent text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 transition";
+                }
+            });
+
+            renderFeedLists();
+            playInteractionClick();
+        }
+
+        // Map location quick focus helper
+        function zoomToIncident(lat, lng) {
+            switchView('home');
+            if (leafletMap) {
+                leafletMap.setView([lat, lng], 16);
+            }
+        }
+
+        function upvoteIncident(id) {
+            playInteractionClick();
+            // Simple animated notification
+            showSystemBanner("Incident report verified by crowdsourced nodes (+1 security signal)");
+        }
+
+        // Global Alert/Notification System
+        function showSystemBanner(message, type="info") {
+            const banner = document.createElement('div');
+            banner.className = `fixed bottom-24 left-1/2 -translate-x-1/2 z-[2000] px-4 py-2.5 rounded-xl text-xs font-bold shadow-xl animate-bounce flex items-center gap-2 max-w-[90%] text-center border ${type === 'danger' ? 'bg-red-500 text-white border-red-600' : 'bg-gray-900 text-white dark:bg-white dark:text-gray-900 border-gray-800 dark:border-white'}`;
+            banner.innerHTML = `
+                <i data-lucide="shield-check" class="w-4 h-4 text-brand-400 flex-shrink-0"></i>
+                <span>${message}</span>
+            `;
+            document.body.appendChild(banner);
+            lucide.createIcons();
+            
+            setTimeout(() => {
+                banner.remove();
+            }, 3000);
+        }
+
+        // Active SOS state counters
+        let sosCountdownTimer = null;
+        let countdownValue = 10;
+
+        function startEmergencyTrigger() {
+            playInteractionClick();
+            
+            const mainButton = document.getElementById('sos-button-main');
+            const staticGlow = document.getElementById('sos-static-glow');
+            const countdownPanel = document.getElementById('sos-active-panel');
+            
+            // Disable button to prevent overlapping clicks
+            mainButton.disabled = true;
+            mainButton.classList.add('scale-95', 'opacity-80');
+            staticGlow.classList.add('hidden');
+
+            // Show radiating circular waves
+            document.getElementById('ripple1').classList.remove('hidden');
+            document.getElementById('ripple2').classList.remove('hidden');
+            document.getElementById('ripple3').classList.remove('hidden');
+
+            // Setup active digit counting
+            countdownValue = 10;
+            document.getElementById('countdown-digit').innerText = countdownValue;
+            countdownPanel.classList.remove('hidden');
+
+            // Trigger alarm synthesizer if allowed
+            triggerSirenSynth();
+
+            // Notify contacts simulated SMS
+            simulateContactsSMSBroadcast();
+
+            sosCountdownTimer = setInterval(() => {
+                countdownValue--;
+                document.getElementById('countdown-digit').innerText = countdownValue;
+                if (countdownValue <= 0) {
+                    clearInterval(sosCountdownTimer);
+                    silenceSirenSynth();
+                    showSystemBanner("CRITICAL BROADCAST TRANSMITTED: Rescue squads dispatched!", "danger");
+                    cancelEmergencyTrigger();
+                }
+            }, 1000);
+        }
+
+        function cancelEmergencyTrigger() {
+            clearInterval(sosCountdownTimer);
+            silenceSirenSynth();
+
+            const mainButton = document.getElementById('sos-button-main');
+            const staticGlow = document.getElementById('sos-static-glow');
+            const countdownPanel = document.getElementById('sos-active-panel');
+
+            mainButton.disabled = false;
+            mainButton.classList.remove('scale-95', 'opacity-80');
+            staticGlow.classList.remove('hidden');
+
+            document.getElementById('ripple1').classList.add('hidden');
+            document.getElementById('ripple2').classList.add('hidden');
+            document.getElementById('ripple3').classList.add('hidden');
+
+            countdownPanel.classList.add('hidden');
+            playInteractionClick();
+        }
+
+        function simulateContactsSMSBroadcast() {
+            emergencyContacts.forEach(contact => {
+                console.log(`Simulated emergency dispatch alert transmission to ${contact.name} at ${contact.phone}`);
+            });
+            showSystemBanner(`Emergency broadcast telemetry sent to ${emergencyContacts.length} trusted contacts`);
+        }
+
+        // Emergency Helpline calling simulator with Web Audio tones
+        function simulateHotlineCall(name, number) {
+            playInteractionClick();
+            
+            document.getElementById('simulation-hotline-name').innerText = name;
+            document.getElementById('simulation-hotline-number').innerText = number;
+            document.getElementById('simulation-call-status').innerText = "Initiating dial coordinates...";
+            document.getElementById('hotline-simulation-modal').classList.remove('hidden');
+
+            // Synthesize Call Tone via Speech
+            let delayTime = 1500;
+            setTimeout(() => {
+                document.getElementById('simulation-call-status').innerText = "Ringing...";
+                // Ringing tone synth
+                try {
+                    const ringOsc = audioCtx.createOscillator();
+                    const ringGain = audioCtx.createGain();
+                    ringOsc.type = 'sine';
+                    ringOsc.frequency.setValueAtTime(440, audioCtx.currentTime);
+                    ringGain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+                    ringOsc.connect(ringGain);
+                    ringGain.connect(audioCtx.destination);
+                    ringOsc.start();
+                    ringOsc.stop(audioCtx.currentTime + 0.8);
+                } catch(e){}
+            }, 1000);
+
+            setTimeout(() => {
+                document.getElementById('simulation-call-status').innerText = "Agent Connected • Live Audio Active";
+                // Speak out agent confirmation safely
+                if ('speechSynthesis' in window) {
+                    const utterance = new SpeechSynthesisUtterance(`Guardian dispatch linked. Emergency assistance is routing to your active coordinate track now. Keep connection clear.`);
+                    utterance.rate = 1.05;
+                    window.speechSynthesis.speak(utterance);
+                }
+            }, 3000);
+        }
+
+        function terminateHelplineCall() {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+            document.getElementById('hotline-simulation-modal').classList.add('hidden');
+            playInteractionClick();
+        }
+
+        // Community Verified reporting triggers
+        function openReportModal() {
+            playInteractionClick();
+            document.getElementById('report-modal').classList.remove('hidden');
+        }
+
+        function closeReportModal() {
+            document.getElementById('report-modal').classList.add('hidden');
+        }
+
+        function submitVerifiedCommunityReport() {
+            const titleInput = document.getElementById('new-report-title').value.trim();
+            const descInput = document.getElementById('new-report-desc').value.trim();
+            const typeSelect = document.getElementById('new-report-type').value;
+            const latVal = parseFloat(document.getElementById('new-report-lat').value);
+            const lngVal = parseFloat(document.getElementById('new-report-lng').value);
+
+            if (!titleInput || !descInput) {
+                showSystemBanner("Error: Please provide detailed alert parameters", "danger");
+                return;
+            }
+
+            // Assign randomized SVG thumbnail based on Category or keyword
+            let selectedThumb = 'streetlamp';
+            if (typeSelect === 'High Risk') selectedThumb = 'suspicious';
+            if (typeSelect === 'Safe') selectedThumb = 'safe';
+            if (titleInput.toLowerCase().includes('construction')) selectedThumb = 'construction';
+
+            // Prepend new report
+            const newReport = {
+                id: Date.now(),
+                title: titleInput,
+                category: typeSelect,
+                timeAgo: "Just now",
+                distance: "0.1 km away",
+                desc: descInput,
+                lat: latVal,
+                lng: lngVal,
+                thumbType: selectedThumb
+            };
+
+            reportsData.unshift(newReport);
+            
+            // Clean inputs
+            document.getElementById('new-report-title').value = '';
+            document.getElementById('new-report-desc').value = '';
+            
+            // Update feeds & pins map
+            renderFeedLists();
+            loadMapMarkers();
+            
+            // Close modal
+            closeReportModal();
+            showSystemBanner("Ecosystem telemetry report logged & validated securely.");
+
+            // Pan map to new marker
+            switchView('home');
+            if (leafletMap) {
+                leafletMap.setView([latVal, lngVal], 15);
+            }
+        }
+
+        // Add/Remove Contacts Management
+        function renderContacts() {
+            const container = document.getElementById('contacts-list-container');
+            container.innerHTML = '';
+
+            emergencyContacts.forEach(contact => {
+                const card = document.createElement('div');
+                card.className = "flex items-center justify-between p-2.5 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800";
+                card.innerHTML = `
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold text-xs">
+                            ${contact.name.split(' ').map(n=>n[0]).join('')}
+                        </div>
+                        <div class="text-xs">
+                            <p class="font-bold text-gray-800 dark:text-gray-100">${contact.name}</p>
+                            <p class="text-[9px] text-gray-400 font-bold tracking-wider">${contact.relation} &bull; ${contact.phone}</p>
+                        </div>
+                    </div>
+                    <button onclick="deleteContact(${contact.id})" class="text-gray-400 hover:text-red-500 p-1.5 rounded-lg transition">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+            lucide.createIcons();
+        }
+
+        function openAddContactModal() {
+            playInteractionClick();
+            document.getElementById('add-contact-modal').classList.remove('hidden');
+        }
+
+        function closeAddContactModal() {
+            document.getElementById('add-contact-modal').classList.add('hidden');
+        }
+
+        function saveNewContact() {
+            const name = document.getElementById('new-contact-name').value.trim();
+            const phone = document.getElementById('new-contact-phone').value.trim();
+            const relation = document.getElementById('new-contact-relation').value.trim();
+
+            if (!name || !phone || !relation) {
+                showSystemBanner("Error: Compile all contact data", "danger");
+                return;
+            }
+
+            emergencyContacts.push({
+                id: Date.now(),
+                name,
+                phone,
+                relation
+            });
+
+            // Refresh
+            renderContacts();
+            closeAddContactModal();
+            showSystemBanner("Trusted safe contact added to circle.");
+
+            document.getElementById('new-contact-name').value = '';
+            document.getElementById('new-contact-phone').value = '';
+            document.getElementById('new-contact-relation').value = '';
+        }
+
+        function deleteContact(id) {
+            playInteractionClick();
+            emergencyContacts = emergencyContacts.filter(c => c.id !== id);
+            renderContacts();
+            showSystemBanner("Contact removed from active alerts");
+        }
+
+        // Theme Toggle Framework matching Dark and Light Mode specs
+        function toggleGlobalTheme() {
+            const body = document.body;
+            const html = document.documentElement;
+            playInteractionClick();
+            
+            if (activeTheme === 'light') {
+                body.classList.add('dark');
+                html.classList.add('dark');
+                activeTheme = 'dark';
+            } else {
+                body.classList.remove('dark');
+                html.classList.remove('dark');
+                activeTheme = 'light';
+            }
+
+            // Sync Tile Layers
+            updateMapTiles();
+        }
+
+        // ==================== CHATBOT GEMINI INTEGRATION ====================
+        const systemPrompt = "You are the Guardian Path AI Companion, an empathetic, sub-second latency safety intelligence assistant designed to guide users through hazardous environments, legal self-defense, emergency directions, or immediate calming instructions. Provide ultra-concise, practical safety guidance, always pointing out actions to take. Limit output to 3-4 highly actionable sentences.";
+
+        async function fetchGeminiWithBackoff(promptText) {
+            const maxRetries = 5;
+            let attempt = 0;
+            let delay = 1000; // 1s initial delay
+
+            while (attempt < maxRetries) {
+                try {
+                    // Endpoint targeting flash preview model as per developer specifications
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: promptText }] }],
+                            systemInstruction: { parts: [{ text: systemPrompt }] }
+                        })
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        return data.candidates?.[0]?.content?.parts?.[0]?.text;
+                    }
+                } catch (err) {
+                    // Attempt failure catches below
+                }
+
+                attempt++;
+                if (attempt < maxRetries) {
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    delay *= 2; // Exponential backoff scaling
+                }
+            }
+            throw new Error("API call exceeded maximum retry limits.");
+        }
+
+        async function sendChatMessage() {
+            const input = document.getElementById('ai-chat-input');
+            const chatBox = document.getElementById('assistant-chat-box');
+            const promptText = input.value.trim();
+
+            if (!promptText) return;
+
+            playInteractionClick();
+
+            // Append User message
+            const userMsg = document.createElement('div');
+            userMsg.className = "flex gap-2.5 items-start justify-end max-w-[85%] ml-auto";
+            userMsg.innerHTML = `
+                <div class="p-3 rounded-2xl bg-brand-600 text-white text-xs leading-relaxed font-semibold">
+                    ${promptText}
+                </div>
+            `;
+            chatBox.appendChild(userMsg);
+            input.value = '';
+            scrollChatToBottom();
+
+            // Append Loading indicators
+            const loadBubble = document.createElement('div');
+            loadBubble.className = "flex gap-2.5 items-start max-w-[85%] animate-pulse";
+            loadBubble.id = "bot-loading-indicator";
+            loadBubble.innerHTML = `
+                <div class="w-6 h-6 rounded-lg bg-purple-500/10 text-purple-500 flex items-center justify-center mt-0.5">
+                    <i data-lucide="bot" class="w-3.5 h-3.5"></i>
+                </div>
+                <div class="p-3 rounded-2xl bg-gray-100 dark:bg-gray-900 text-xs text-gray-400 font-bold">
+                    Analyzing safety coordinates and legal framework parameters...
+                </div>
+            `;
+            chatBox.appendChild(loadBubble);
+            scrollChatToBottom();
+            lucide.createIcons();
+
+            try {
+                let botReply = "";
+
+                if (apiKey && apiKey !== "") {
+                    botReply = await fetchGeminiWithBackoff(promptText);
+                } else {
+                    // Clean local mock response fallback if API key isn't setup at runtime
+                    botReply = getLocalOfflineResponse(promptText);
+                }
+
+                // Remove loading
+                document.getElementById('bot-loading-indicator').remove();
+
+                // Append real reply
+                const botBubble = document.createElement('div');
+                botBubble.className = "flex gap-2.5 items-start max-w-[85%] animate-[fadeIn_0.3s_ease]";
+                botBubble.innerHTML = `
+                    <div class="w-6 h-6 rounded-lg bg-purple-500/10 text-purple-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <i data-lucide="bot" class="w-3.5 h-3.5"></i>
+                    </div>
+                    <div class="p-3 rounded-2xl bg-gray-100 dark:bg-gray-900 text-xs text-gray-800 dark:text-gray-200 leading-relaxed font-medium">
+                        ${botReply}
+                    </div>
+                `;
+                chatBox.appendChild(botBubble);
+                scrollChatToBottom();
+                lucide.createIcons();
+
+            } catch (err) {
+                document.getElementById('bot-loading-indicator').remove();
+                showSystemBanner("Assistant Link Issue: Operating off cached telemetry guides.", "danger");
+                
+                const botBubble = document.createElement('div');
+                botBubble.className = "flex gap-2.5 items-start max-w-[85%]";
+                botBubble.innerHTML = `
+                    <div class="w-6 h-6 rounded-lg bg-red-500/10 text-red-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i>
+                    </div>
+                    <div class="p-3 rounded-2xl bg-red-50/50 dark:bg-red-950/20 text-xs text-red-800 dark:text-red-300 font-medium">
+                        Unable to connect safely. Follow standard lit paths, prioritize crowded transit terminals, and tap the circular SOS trigger for immediate helpline dial paths.
+                    </div>
+                `;
+                chatBox.appendChild(botBubble);
+                scrollChatToBottom();
+                lucide.createIcons();
+            }
+        }
+
+        function scrollChatToBottom() {
+            const chatBox = document.getElementById('assistant-chat-box');
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function handleChatKey(e) {
+            if (e.key === 'Enter') {
+                sendChatMessage();
+            }
+        }
+
+        // High fidelity simulated offline guidelines
+        function getLocalOfflineResponse(query) {
+            const lowQuery = query.toLowerCase();
+            if (lowQuery.includes('lit') || lowQuery.includes('dark') || lowQuery.includes('lamp')) {
+                return "Caution flagged. Colombo municipal authorities suggest bypassing unlit bypass paths past 8 PM. Route along R. A. De Mel Mawatha for maximum ambient luminary metrics.";
+            }
+            if (lowQuery.includes('first aid') || lowQuery.includes('medical') || lowQuery.includes('hurt')) {
+                return "1. Elevate injured areas and apply direct clean pressure immediately. 2. Contact the Suwa Seriya dispatch hub at 1990 for responsive paramedics. 3. Remain stationary in safe, well-lit spaces.";
+            }
+            if (lowQuery.includes('police') || lowQuery.includes('station') || lowQuery.includes('guard')) {
+                return "The nearest active security post is located approximately 0.6 km away near the public terminal block. Keep your ambient audio safety vault check active on your device profile.";
+            }
+            return "Safety telemetry verified. Secure shelter points and patrolled vectors are highlighted in green. Let me know if you would like me to detail emergency routes for your coordinates.";
+        }
+
+        // APP INITIAL START ENGINE
+        window.onload = function () {
+            // Initializing map instance
+            initSafetyMap();
+            // Load preloaded incidents lists
+            renderFeedLists();
+            // Load emergency contacts circles
+            renderContacts();
+        };
+
+    </script>
+</body>
+</html>
