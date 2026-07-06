@@ -1,0 +1,19 @@
+name: guardian_path
+description: Guardian Path flutter mobile prototype
+publish_to: 'none'
+version: 0.1.0
+environment:
+  sdk: ">=2.17.0 <3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_map: ^4.0.0
+  latlong2: ^0.8.1
+  http: ^0.13.6
+  flutter_dotenv: ^5.0.2
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/guardian-path.png
