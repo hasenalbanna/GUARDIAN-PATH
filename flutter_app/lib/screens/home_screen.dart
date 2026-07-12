@@ -7,7 +7,7 @@ import 'report_issue_screen.dart';
 import 'community_feed.dart';
 import 'issue_detail_screen.dart';
 import 'login_screen.dart';
-import '../main.dart'; // to access themeNotifier
+import '../theme_notifier.dart'; // to access themeNotifier
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -20,7 +20,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int _index = 0;
   final _mapController = MapController();
   final _center = LatLng(6.9015, 79.9140);
-  bool _showLiveMap = false;
+  bool _isMapExpanded = false;
 
   void _logout() async {
     await FirebaseAuth.instance.signOut();
@@ -30,8 +30,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // If not on Home tab, show dummy placeholder for now (we'll implement others soon)
     if (_index != 0) {
+      // Temporary placeholder, soon to be replaced with actual screens
       return Scaffold(
         body: Center(child: Text("Tab $_index coming soon...")),
         bottomNavigationBar: _buildCustomBottomNav(),
@@ -43,135 +43,138 @@ class _HomeScreenState extends State<HomeScreen> {
     final isDark = themeNotifier.value == ThemeMode.dark;
     
     return Scaffold(
-      extendBody: true, // important for floating nav bar
+      extendBody: true, 
       body: Column(
         children: [
-          // Custom Top Bar
-          SafeArea(
-            bottom: false,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Hello, HASEN',
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                  ),
-                  Row(
-                    children: [
-                      IconButton(
-                        icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
-                        onPressed: () {
-                          themeNotifier.value = isDark ? ThemeMode.light : ThemeMode.dark;
-                        },
-                      ),
-                      const SizedBox(width: 8),
-                      CircleAvatar(
-                        backgroundColor: isDark ? Colors.white : Colors.black,
-                        child: Text(
-                          'H',
-                          style: TextStyle(color: isDark ? Colors.black : Colors.white, fontWeight: FontWeight.bold),
+          // Custom Top Bar (Hidden when map is full screen)
+          if (!_isMapExpanded)
+            SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Hello, HASEN',
+                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                    ),
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
+                          onPressed: () {
+                            themeNotifier.value = isDark ? ThemeMode.light : ThemeMode.dark;
+                          },
                         ),
-                      )
-                    ],
-                  )
-                ],
+                        const SizedBox(width: 8),
+                        CircleAvatar(
+                          backgroundColor: isDark ? Colors.white : Colors.black,
+                          child: Text(
+                            'H',
+                            style: TextStyle(color: isDark ? Colors.black : Colors.white, fontWeight: FontWeight.bold),
+                          ),
+                        )
+                      ],
+                    )
+                  ],
+                ),
               ),
             ),
-          ),
-          // Split View: Map (Top) & Reports (Bottom)
+          // Split View: Map & Reports
           Expanded(
             child: Stack(
               children: [
-                // 1. MAP LAYER (Top half)
+                // 1. MAP LAYER 
                 Positioned(
                   top: 0,
                   left: 0,
                   right: 0,
-                  height: MediaQuery.of(context).size.height * 0.45,
+                  height: _isMapExpanded ? MediaQuery.of(context).size.height : MediaQuery.of(context).size.height * 0.45,
                   child: _buildMapLayer(),
                 ),
-                // 2. BOTTOM SHEET LAYER (Bottom half overlapping map)
-                Positioned(
-                  top: MediaQuery.of(context).size.height * 0.40, // overlap slightly
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).scaffoldBackgroundColor,
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, -5),
-                        )
-                      ],
+                // 2. BOTTOM SHEET LAYER (Hidden when map is expanded)
+                if (!_isMapExpanded)
+                  Positioned(
+                    top: MediaQuery.of(context).size.height * 0.40,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).scaffoldBackgroundColor,
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 10,
+                            offset: const Offset(0, -5),
+                          )
+                        ],
+                      ),
+                      child: _buildRecentReportsList(),
                     ),
-                    child: _buildRecentReportsList(),
                   ),
-                ),
               ],
             ),
           ),
         ],
       ),
-      floatingActionButton: _buildCustomFab(),
+      floatingActionButton: _isMapExpanded ? null : _buildCustomFab(),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: _buildCustomBottomNav(),
+      bottomNavigationBar: _isMapExpanded ? null : _buildCustomBottomNav(),
     );
   }
 
   Widget _buildMapLayer() {
-    if (!_showLiveMap) {
-      return Container(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        child: Center(
-          child: FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).primaryColor,
-              foregroundColor: Theme.of(context).scaffoldBackgroundColor,
-            ),
-            onPressed: () => setState(() => _showLiveMap = true),
-            child: const Text('Load Live Map'),
+    return Stack(
+      children: [
+        StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance.collection('issues').snapshots(),
+          builder: (context, snapshot) {
+            List<Marker> markers = [];
+            if (snapshot.hasData) {
+              for (var doc in snapshot.data!.docs) {
+                final data = doc.data() as Map<String, dynamic>;
+                if (data['latitude'] != null && data['longitude'] != null) {
+                  markers.add(
+                    Marker(
+                      point: LatLng(data['latitude'], data['longitude']),
+                      width: 40,
+                      height: 40,
+                      builder: (ctx) => const Icon(Icons.location_on, color: Colors.black, size: 30),
+                    ),
+                  );
+                }
+              }
+            }
+            return FlutterMap(
+              mapController: _mapController,
+              options: MapOptions(center: _center, zoom: 14),
+              children: [
+                TileLayer(
+                  urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  subdomains: const ['a', 'b', 'c'],
+                ),
+                MarkerLayer(markers: markers),
+              ],
+            );
+          },
+        ),
+        // Map Controls (Expand/Collapse)
+        Positioned(
+          bottom: _isMapExpanded ? 40 : 100, // adjust position based on expansion
+          right: 16,
+          child: FloatingActionButton(
+            mini: true,
+            heroTag: 'map_expand_btn',
+            backgroundColor: Colors.white,
+            foregroundColor: Colors.black,
+            onPressed: () => setState(() => _isMapExpanded = !_isMapExpanded),
+            child: Icon(_isMapExpanded ? Icons.close_fullscreen : Icons.open_in_full),
           ),
         ),
-      );
-    }
-
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance.collection('issues').snapshots(),
-      builder: (context, snapshot) {
-        List<Marker> markers = [];
-        if (snapshot.hasData) {
-          for (var doc in snapshot.data!.docs) {
-            final data = doc.data() as Map<String, dynamic>;
-            if (data['latitude'] != null && data['longitude'] != null) {
-              markers.add(
-                Marker(
-                  point: LatLng(data['latitude'], data['longitude']),
-                  width: 40,
-                  height: 40,
-                  builder: (ctx) => const Icon(Icons.location_on, color: Colors.black, size: 30),
-                ),
-              );
-            }
-          }
-        }
-        return FlutterMap(
-          mapController: _mapController,
-          options: MapOptions(center: _center, zoom: 14),
-          children: [
-            TileLayer(
-              urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-              subdomains: const ['a', 'b', 'c'],
-            ),
-            MarkerLayer(markers: markers),
-          ],
-        );
-      },
+      ],
     );
   }
 
