@@ -3,6 +3,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter/foundation.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/onboarding_screen.dart';
@@ -13,19 +15,29 @@ Future<void> main() async {
   
   try {
     await dotenv.load(fileName: ".env");
-  } catch (_) {
-    // Allow the app to start without a local .env file.
-  }
+  } catch (_) {}
 
-  // Initialize Firebase (Requires flutterfire configure to have been run)
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+    // Enable offline persistence
+    if (kIsWeb) {
+      try {
+        await FirebaseFirestore.instance.enablePersistence(
+          const PersistenceSettings(synchronizeTabs: true),
+        );
+      } catch (e) {
+        debugPrint("Web persistence error: $e");
+      }
+    } else {
+      FirebaseFirestore.instance.settings = const Settings(
+        persistenceEnabled: true,
+        cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+      );
+    }
   } catch (e) {
     debugPrint("Firebase init error: $e");
-    // In a real scenario, you'd want to handle this gracefully if it fails,
-    // e.g. when google-services.json is missing before user configures it.
   }
 
   runApp(const GuardianPathApp());
@@ -38,7 +50,26 @@ class GuardianPathApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Guardian Path',
-      theme: ThemeData(primarySwatch: Colors.deepPurple),
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: const Color(0xFF0F172A), // Slate 900
+        primaryColor: const Color(0xFF6366F1), // Indigo 500
+        colorScheme: const ColorScheme.dark(
+          primary: Color(0xFF6366F1),
+          secondary: Color(0xFF10B981), // Emerald 500
+          surface: Color(0xFF1E293B), // Slate 800
+          background: Color(0xFF0F172A),
+          error: Color(0xFFEF4444),
+        ),
+        textTheme: GoogleFonts.outfitTextTheme(ThemeData.dark().textTheme),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          centerTitle: true,
+        ),
+        useMaterial3: true,
+      ),
       home: const AuthWrapper(),
     );
   }

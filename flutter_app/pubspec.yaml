@@ -17,9 +17,26 @@ dependencies:
   google_sign_in: ^6.2.1
   cloud_firestore: ^5.6.12
   intl: ^0.20.3
+  google_fonts: ^4.0.4
+  connectivity_plus: ^6.0.3
 
 flutter:
   uses-material-design: true
   assets:
     - assets/guardian-path.png
     - .env
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  web:
+    generate: true
+    image_path: "assets/guardian-path.png"
+    background_color: "#0F172A"
+    theme_color: "#0F172A"
+  image_path: "assets/guardian-path.png"
