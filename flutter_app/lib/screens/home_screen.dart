@@ -5,9 +5,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'report_issue_screen.dart';
 import 'community_feed.dart';
-import 'issue_detail_screen.dart';
 import 'login_screen.dart';
-import '../theme_notifier.dart'; // to access themeNotifier
+import '../theme_notifier.dart';
+import 'profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -31,9 +31,12 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     if (_index != 0) {
-      // Temporary placeholder, soon to be replaced with actual screens
+      Widget child = Center(child: Text("Tab $_index coming soon..."));
+      if (_index == 1) child = const CommunityFeed();
+      if (_index == 3) child = const ProfileScreen();
+      
       return Scaffold(
-        body: Center(child: Text("Tab $_index coming soon...")),
+        body: child,
         bottomNavigationBar: _buildCustomBottomNav(),
         floatingActionButton: _buildCustomFab(),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
@@ -142,7 +145,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       point: LatLng(data['latitude'], data['longitude']),
                       width: 40,
                       height: 40,
-                      builder: (ctx) => const Icon(Icons.location_on, color: Colors.black, size: 30),
+                      builder: (ctx) => GestureDetector(
+                        onTap: () => _showIssuePopup(context, doc.id, data),
+                        child: const Icon(Icons.location_on, color: Colors.red, size: 30),
+                      ),
                     ),
                   );
                 }
@@ -238,6 +244,57 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  void _showIssuePopup(BuildContext context, String issueId, Map<String, dynamic> data) {
+    String dateTimeStr = 'No time provided';
+    if (data['incidentDateTime'] != null) {
+      final dt = DateTime.parse(data['incidentDateTime']).toLocal();
+      dateTimeStr = "${dt.day}/${dt.month}/${dt.year} at ${dt.hour}:${dt.minute.toString().padLeft(2, '0')}";
+    }
+    
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        title: Text(
+          (data['title'] ?? 'Reported Issue').toString().toUpperCase(), 
+          style: const TextStyle(fontWeight: FontWeight.bold)
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.access_time, size: 16, color: Colors.grey),
+                const SizedBox(width: 8),
+                Text(dateTimeStr, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(data['description'] ?? 'No description provided.', style: const TextStyle(fontSize: 14)),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Close', style: TextStyle(color: Theme.of(context).primaryColor)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).primaryColor,
+              foregroundColor: Theme.of(context).scaffoldBackgroundColor,
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(context, MaterialPageRoute(builder: (_) => IssueDetailScreen(issueId: issueId, issueData: data)));
+            },
+            child: const Text('View Details'),
+          )
+        ],
+      ),
     );
   }
 

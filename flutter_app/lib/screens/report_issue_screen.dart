@@ -13,15 +13,55 @@ class ReportIssueScreen extends StatefulWidget {
 
 class _ReportIssueScreenState extends State<ReportIssueScreen> {
   final _formKey = GlobalKey<FormState>();
-  String _selectedCategory = 'Harassment';
-  final List<String> _categories = ['Harassment', 'Theft', 'Vandalism', 'Infrastructure', 'Other'];
+  String _selectedCategory = 'Road/Pothole';
+  final List<String> _categories = [
+    'Road/Pothole',
+    'Flooding',
+    'Elephant Conflict',
+    'Power Outage',
+    'Dengue Outbreak',
+    'Water Shortage',
+    'Landslide',
+    'Wildfire',
+    'Coastal Erosion',
+    'Protest/Roadblock',
+    'Other'
+  ];
   
   final _otherCategoryController = TextEditingController();
   final _descriptionController = TextEditingController();
   
   final _mapController = MapController();
   LatLng _selectedLocation = LatLng(6.9015, 79.9140); // Default to Sri Lanka
+  DateTime _selectedDateTime = DateTime.now();
   bool _isLoading = false;
+
+  Future<void> _pickDateTime() async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: _selectedDateTime,
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
+    );
+    if (date == null) return;
+    
+    if (!mounted) return;
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(_selectedDateTime),
+    );
+    if (time == null) return;
+
+    setState(() {
+      _selectedDateTime = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        time.hour,
+        time.minute,
+      );
+    });
+  }
 
   Future<void> _submitIssue() async {
     if (!_formKey.currentState!.validate()) return;
@@ -36,6 +76,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
         'description': _descriptionController.text.trim(),
         'latitude': _selectedLocation.latitude,
         'longitude': _selectedLocation.longitude,
+        'incidentDateTime': _selectedDateTime.toIso8601String(),
         'userId': user?.uid ?? 'anonymous',
         'createdAt': FieldValue.serverTimestamp(),
       });
@@ -85,37 +126,51 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
                   maxLines: 4,
                   validator: (val) => val == null || val.isEmpty ? 'Description is compulsory' : null,
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Date & Time of Incident'),
+                  subtitle: Text(
+                    "${_selectedDateTime.toLocal()}".split('.')[0],
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  trailing: const Icon(Icons.calendar_today),
+                  onTap: _pickDateTime,
+                ),
+                const SizedBox(height: 16),
                 const Text('Select Location', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
-                const Text('Drag the map to place the marker at the incident location.', style: TextStyle(color: Colors.grey)),
+                const Text('Tap anywhere on the map to place the marker.', style: TextStyle(color: Colors.grey)),
                 const SizedBox(height: 8),
                 Container(
                   height: 250,
                   decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
-                  child: Stack(
+                  child: FlutterMap(
+                    mapController: _mapController,
+                    options: MapOptions(
+                      center: _selectedLocation,
+                      zoom: 14,
+                      onTap: (tapPosition, point) {
+                        setState(() {
+                          _selectedLocation = point;
+                        });
+                      },
+                    ),
                     children: [
-                      FlutterMap(
-                        mapController: _mapController,
-                        options: MapOptions(
-                          center: _selectedLocation,
-                          zoom: 14,
-                          onPositionChanged: (pos, hasGesture) {
-                            if (pos.center != null) {
-                              _selectedLocation = pos.center!;
-                            }
-                          },
-                        ),
-                        children: [
-                          TileLayer(
-                            urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                            subdomains: const ['a', 'b', 'c'],
-                          ),
+                      TileLayer(
+                        urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                        subdomains: const ['a', 'b', 'c'],
+                      ),
+                      MarkerLayer(
+                        markers: [
+                          Marker(
+                            point: _selectedLocation,
+                            width: 40,
+                            height: 40,
+                            builder: (ctx) => const Icon(Icons.location_on, size: 40, color: Colors.black),
+                          )
                         ],
                       ),
-                      const Center(
-                        child: Icon(Icons.location_on, size: 48, color: Colors.red),
-                      )
                     ],
                   ),
                 ),
