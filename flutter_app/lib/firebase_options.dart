@@ -2,6 +2,8 @@ import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
 
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 /// Default [FirebaseOptions] for use with your Firebase apps.
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
@@ -22,9 +24,9 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyDYTUyqCmXpCkwOf58PsQf1vIzXL7g_QKg',
-    appId: '1:876564803371:web:824b30fe2b4c6de69f1f6e',
+  static FirebaseOptions get web => FirebaseOptions(
+    apiKey: dotenv.env['FIREBASE_API_KEY_WEB'] ?? '',
+    appId: dotenv.env['FIREBASE_APP_ID_WEB'] ?? '',
     messagingSenderId: '876564803371',
     projectId: 'guardianpath-e386b',
     authDomain: 'guardianpath-e386b.firebaseapp.com',
@@ -32,9 +34,9 @@ class DefaultFirebaseOptions {
     measurementId: 'G-DQ80K7FVMJ',
   );
 
-  static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDLKen3vjGipnyaxjzbBpgoMta68anU_tk',
-    appId: '1:876564803371:android:e1a094a5f1bed5839f1f6e',
+  static FirebaseOptions get android => FirebaseOptions(
+    apiKey: dotenv.env['FIREBASE_API_KEY_ANDROID'] ?? '',
+    appId: dotenv.env['FIREBASE_APP_ID_ANDROID'] ?? '',
     messagingSenderId: '876564803371',
     projectId: 'guardianpath-e386b',
     storageBucket: 'guardianpath-e386b.firebasestorage.app',
