@@ -7,7 +7,7 @@ import 'report_issue_screen.dart';
 import 'community_feed.dart';
 import 'issue_detail_screen.dart';
 import 'login_screen.dart';
-import 'assistant_screen.dart'; // We'll extract this next
+import '../main.dart'; // to access themeNotifier
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -30,79 +30,112 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final pages = [
-      _buildMapView(context),
-      const CommunityFeed(),
-      const AssistantScreen(),
-    ];
+    // If not on Home tab, show dummy placeholder for now (we'll implement others soon)
+    if (_index != 0) {
+      return Scaffold(
+        body: Center(child: Text("Tab $_index coming soon...")),
+        bottomNavigationBar: _buildCustomBottomNav(),
+        floatingActionButton: _buildCustomFab(),
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      );
+    }
 
+    final isDark = themeNotifier.value == ThemeMode.dark;
+    
     return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            Image.asset('assets/guardian-path.png', width: 36, height: 36),
-            const SizedBox(width: 8),
-            const Text('Guardian Path'),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: _logout,
-          )
+      extendBody: true, // important for floating nav bar
+      body: Column(
+        children: [
+          // Custom Top Bar
+          SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Hello, HASEN',
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                  ),
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
+                        onPressed: () {
+                          themeNotifier.value = isDark ? ThemeMode.light : ThemeMode.dark;
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      CircleAvatar(
+                        backgroundColor: isDark ? Colors.white : Colors.black,
+                        child: Text(
+                          'H',
+                          style: TextStyle(color: isDark ? Colors.black : Colors.white, fontWeight: FontWeight.bold),
+                        ),
+                      )
+                    ],
+                  )
+                ],
+              ),
+            ),
+          ),
+          // Split View: Map (Top) & Reports (Bottom)
+          Expanded(
+            child: Stack(
+              children: [
+                // 1. MAP LAYER (Top half)
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: MediaQuery.of(context).size.height * 0.45,
+                  child: _buildMapLayer(),
+                ),
+                // 2. BOTTOM SHEET LAYER (Bottom half overlapping map)
+                Positioned(
+                  top: MediaQuery.of(context).size.height * 0.40, // overlap slightly
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).scaffoldBackgroundColor,
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 10,
+                          offset: const Offset(0, -5),
+                        )
+                      ],
+                    ),
+                    child: _buildRecentReportsList(),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
-      body: pages[_index],
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          // Normal SOS logic or report issue
-          // We also have report issue which the user asked for.
-          // Let's make this floating action open the report issue screen.
-          // Or SOS is different? The user said "report an issue where some details should ask".
-          // I will change this to Report Issue, and keep a separate button for SOS if needed, or maybe just Report Issue.
-          Navigator.push(context, MaterialPageRoute(builder: (_) => const ReportIssueScreen()));
-        },
-        label: const Text('Report Issue'),
-        icon: const Icon(Icons.warning_amber_rounded),
-        backgroundColor: Colors.red,
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _index,
-        onTap: (i) => setState(() => _index = i),
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Map'),
-          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Community'),
-          BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Assistant'),
-        ],
-      ),
+      floatingActionButton: _buildCustomFab(),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      bottomNavigationBar: _buildCustomBottomNav(),
     );
   }
 
-  Widget _buildMapView(BuildContext context) {
+  Widget _buildMapLayer() {
     if (!_showLiveMap) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.map_outlined, size: 72, color: Colors.deepPurple),
-              const SizedBox(height: 16),
-              const Text(
-                'Live map is ready to load',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Tap below after the emulator is fully online to fetch the free OpenStreetMap tiles.',
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              FilledButton(
-                onPressed: () => setState(() => _showLiveMap = true),
-                child: const Text('Load Live Map'),
-              ),
-            ],
+      return Container(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        child: Center(
+          child: FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).primaryColor,
+              foregroundColor: Theme.of(context).scaffoldBackgroundColor,
+            ),
+            onPressed: () => setState(() => _showLiveMap = true),
+            child: const Text('Load Live Map'),
           ),
         ),
       );
@@ -121,18 +154,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   point: LatLng(data['latitude'], data['longitude']),
                   width: 40,
                   height: 40,
-                  builder: (ctx) => GestureDetector(
-                    onTap: () {
-                      _showIssuePopup(context, doc.id, data);
-                    },
-                    child: const Icon(Icons.location_on, color: Colors.red, size: 40),
-                  ),
+                  builder: (ctx) => const Icon(Icons.location_on, color: Colors.black, size: 30),
                 ),
               );
             }
           }
         }
-
         return FlutterMap(
           mapController: _mapController,
           options: MapOptions(center: _center, zoom: 14),
@@ -140,7 +167,6 @@ class _HomeScreenState extends State<HomeScreen> {
             TileLayer(
               urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
               subdomains: const ['a', 'b', 'c'],
-              userAgentPackageName: 'com.example.guardian_path',
             ),
             MarkerLayer(markers: markers),
           ],
@@ -149,25 +175,216 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _showIssuePopup(BuildContext context, String issueId, Map<String, dynamic> data) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: Text(data['title'] ?? 'Reported Issue', style: const TextStyle(color: Colors.red)),
-        content: Text(data['description'] ?? 'No description provided.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+  Widget _buildRecentReportsList() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Drag Handle Indicator
+        Center(
+          child: Container(
+            margin: const EdgeInsets.only(top: 12, bottom: 20),
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.grey.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(2),
+            ),
           ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.push(context, MaterialPageRoute(builder: (_) => IssueDetailScreen(issueId: issueId, issueData: data)));
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Recent Reports',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900),
+              ),
+              Text(
+                'View All',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).primaryColor,
+                  decoration: TextDecoration.underline,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        Expanded(
+          child: StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance.collection('issues').orderBy('createdAt', descending: true).snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator(color: Colors.black));
+              }
+              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                return const Center(child: Text("No recent reports."));
+              }
+              return ListView.builder(
+                padding: const EdgeInsets.only(left: 24, right: 24, bottom: 100), // bottom padding for nav bar
+                itemCount: snapshot.data!.docs.length,
+                itemBuilder: (context, i) {
+                  final data = snapshot.data!.docs[i].data() as Map<String, dynamic>;
+                  return _buildReportCard(data);
+                },
+              );
             },
-            child: const Text('View Details'),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildReportCard(Map<String, dynamic> data) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.withOpacity(0.2)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           )
         ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Icon Container
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.grey.withOpacity(0.3)),
+            ),
+            child: const Icon(Icons.location_on_outlined, size: 24),
+          ),
+          const SizedBox(width: 16),
+          // Details
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      (data['title'] ?? 'UNKNOWN').toString().toUpperCase(),
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                    ),
+                    Text(
+                      'Just now', // Placeholder for date
+                      style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
+                    )
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  data['description'] ?? 'No details',
+                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Ampara District, Eastern Province, Sri Lanka', // Placeholder location string
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                ),
+                const SizedBox(height: 12),
+                // Status Badge
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Text(
+                    'Pending',
+                    style: TextStyle(color: Colors.red, fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
+                )
+              ],
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCustomFab() {
+    final isDark = themeNotifier.value == ThemeMode.dark;
+    return FloatingActionButton(
+      onPressed: () {
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const ReportIssueScreen()));
+      },
+      backgroundColor: isDark ? Colors.white : Colors.black,
+      foregroundColor: isDark ? Colors.black : Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 4,
+      child: const Icon(Icons.add, size: 28),
+    );
+  }
+
+  Widget _buildCustomBottomNav() {
+    final isDark = themeNotifier.value == ThemeMode.dark;
+    return Container(
+      margin: const EdgeInsets.only(left: 16, right: 16, bottom: 24),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.grey.shade900 : Colors.black,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: BottomAppBar(
+        color: Colors.transparent,
+        elevation: 0,
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 8.0,
+        child: SizedBox(
+          height: 60,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildNavItem(Icons.home_filled, 'Home', 0),
+              _buildNavItem(Icons.people_alt_outlined, 'Community', 1),
+              const SizedBox(width: 48), // Space for FAB
+              _buildNavItem(Icons.description_outlined, 'My Issues', 2),
+              _buildNavItem(Icons.person_outline, 'Profile', 3),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem(IconData icon, String label, int index) {
+    bool isSelected = _index == index;
+    return GestureDetector(
+      onTap: () => setState(() => _index = index),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: isSelected
+            ? BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(12),
+              )
+            : null,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: Colors.white, size: 24),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
       ),
     );
   }
